@@ -1,0 +1,16 @@
+{
+  "cases": [
+    {
+      "query": "企业级 RAG 系统为什么需要质量门控",
+      "answerable": true,
+      "expected_phrases": ["质量门控"],
+      "relevant_source_ids": []
+    },
+    {
+      "query": "qzxwvu banana flux capacitor",
+      "answerable": false,
+      "expected_phrases": [],
+      "relevant_source_ids": []
+    }
+  ]
+}

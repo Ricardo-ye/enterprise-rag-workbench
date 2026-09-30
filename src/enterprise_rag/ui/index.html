@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <meta name="theme-color" content="#12233d">
+    <title>企业 RAG 工作台</title>
+    <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/assets/styles.css?v=11">
+    <script src="/assets/app.js?v=11" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">跳到主要内容</a>
+
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="主导航">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">R/</span>
+          <span>
+            <strong>企业 RAG</strong>
+            <small>知识协作工作台</small>
+          </span>
+        </div>
+
+        <nav class="primary-nav" aria-label="工作区">
+          <a class="nav-item is-active" href="#assistant" data-view-link="assistant">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5h14v10H9l-4 3v-13Z"/><path d="M8 9h8M8 12h5"/></svg>
+            <span>智能问答</span>
+          </a>
+          <a class="nav-item" href="#knowledge" data-view-link="knowledge">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 5.5A2.5 2.5 0 0 1 7 3h12.5v15H7a2.5 2.5 0 0 0-2.5 2.5v-15Z"/><path d="M7 18h12.5M8.5 7h7M8.5 10h5"/></svg>
+            <span>知识中心</span>
+          </a>
+          <a class="nav-item" href="#operations" data-view-link="operations">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18V9m5 9V5m5 13v-7m5 7V3"/><path d="M3 21h18"/></svg>
+            <span>运行观测</span>
+          </a>
+        </nav>
+
+        <div class="sidebar-status">
+          <span class="eyebrow">服务状态</span>
+          <div class="service-indicator" id="sidebar-service-status">
+            <span class="status-dot" aria-hidden="true"></span>
+            <span>正在连接</span>
+          </div>
+          <button class="text-button" id="open-connection" type="button">连接设置</button>
+        </div>
+      </aside>
+
+      <div class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow" id="view-kicker">对话工作区</p>
+            <h1 id="view-title">智能问答</h1>
+          </div>
+          <div class="topbar-actions">
+            <span class="environment-badge" id="environment-badge">环境 · —</span>
+            <button class="icon-button" id="refresh-view" type="button" aria-label="刷新当前页面" title="刷新当前页面">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M18.2 9A7 7 0 0 0 6.1 6.4L4 9m2 6a7 7 0 0 0 12.1 2.6L20 15"/></svg>
+            </button>
+          </div>
+        </header>
+
+        <main id="main-content" tabindex="-1">
+          <section class="view is-visible" id="view-assistant" data-view="assistant" aria-labelledby="assistant-heading">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">有据可查的企业问答</p>
+                <h2 id="assistant-heading">从问题到证据，一处完成</h2>
+                <p>系统自动选择任务、FAQ、知识图谱或多路 RAG，并展示真实引用和决策过程。</p>
+              </div>
+              <button class="secondary-button" id="new-conversation" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                新对话
+              </button>
+            </div>
+
+            <div class="assistant-layout">
+              <section class="conversation-panel" aria-label="对话">
+                <div class="conversation-scroll" id="conversation-scroll">
+                  <div class="conversation-empty" id="conversation-empty">
+                    <span class="empty-glyph" aria-hidden="true">问</span>
+                    <h3>今天想了解什么？</h3>
+                    <p>你可以查询企业知识，也可以发起需要补充信息的业务任务。</p>
+                    <div class="suggestion-grid" aria-label="示例问题">
+                      <button type="button" data-suggestion="退款政策是什么？">查询退款政策</button>
+                      <button type="button" data-suggestion="企业版支持哪些部署方式？">了解部署方式</button>
+                      <button type="button" data-suggestion="我想预约车辆试驾">发起预约任务</button>
+                    </div>
+                  </div>
+                  <ol class="message-list" id="message-list" aria-label="对话消息"></ol>
+                </div>
+
+                <form class="composer" id="assistant-form">
+                  <label for="assistant-query">输入问题</label>
+                  <textarea id="assistant-query" name="query" rows="3" maxlength="4000" placeholder="例如：企业版的数据如何隔离？" aria-describedby="composer-help composer-error" required></textarea>
+                  <div class="composer-error" id="composer-error" role="alert"></div>
+                  <div class="composer-footer">
+                    <div class="composer-options">
+                      <label class="compact-field" for="actor-type">
+                        <span>身份</span>
+                        <select id="actor-type" name="actor_type">
+                          <option value="unknown">自动判断</option>
+                          <option value="consumer">个人用户</option>
+                          <option value="employee">企业员工</option>
+                          <option value="partner">合作伙伴</option>
+                          <option value="business">企业客户</option>
+                        </select>
+                      </label>
+                      <span id="composer-help"><kbd>Ctrl</kbd> + <kbd>Enter</kbd> 发送</span>
+                      <span id="character-count">0 / 4000</span>
+                    </div>
+                    <button class="primary-button" id="send-query" type="submit">
+                      <span>发送问题</span>
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 14-7-4 14-3-5-7-2Z"/><path d="m12 14 7-9"/></svg>
+                    </button>
+                  </div>
+                </form>
+              </section>
+
+              <aside class="inspector" aria-labelledby="inspector-title">
+                <div class="inspector-header">
+                  <div>
+                    <p class="eyebrow">本轮决策</p>
+                    <h3 id="inspector-title">回答依据</h3>
+                  </div>
+                  <span class="route-badge" id="route-badge">等待提问</span>
+                </div>
+                <div class="inspector-empty" id="inspector-empty">
+                  <p>提问后，这里会显示路由、安全判断、检索通道与引用来源。</p>
+                </div>
+                <div class="inspector-content" id="inspector-content" hidden>
+                  <dl class="decision-list" id="decision-list"></dl>
+                  <div class="inspector-section">
+                    <h4>检索通道</h4>
+                    <ul class="route-list" id="retrieval-routes"></ul>
+                  </div>
+                  <div class="inspector-section">
+                    <h4>引用证据</h4>
+                    <ol class="citation-list" id="citation-list"></ol>
+                  </div>
+                  <details class="trace-details">
+                    <summary>查看路由轨迹</summary>
+                    <ol id="trace-list"></ol>
+                  </details>
+                </div>
+              </aside>
+            </div>
+          </section>
+
+          <section class="view" id="view-knowledge" data-view="knowledge" aria-labelledby="knowledge-heading" hidden>
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">知识治理</p>
+                <h2 id="knowledge-heading">建立可检索的事实基础</h2>
+                <p>上传文档、维护已审核 FAQ 与知识图谱，并直接检查关键词和语义召回。</p>
+              </div>
+              <button class="secondary-button" id="rebuild-index" type="button">重建索引</button>
+            </div>
+
+            <div class="knowledge-layout">
+              <section class="knowledge-main" aria-labelledby="documents-title">
+                <div class="panel-heading">
+                  <div>
+                    <p class="eyebrow">文档库</p>
+                    <h3 id="documents-title">已入库文档 <span class="count-badge" id="document-count">0</span></h3>
+                  </div>
+                  <button class="text-button" id="refresh-documents" type="button">刷新</button>
+                </div>
+
+                <form class="upload-form" id="document-form">
+                  <div class="drop-zone" id="drop-zone">
+                    <input type="file" id="document-file" name="file" accept=".md,.txt,.pdf,text/markdown,text/plain,application/pdf" required>
+                    <label for="document-file">
+                      <span class="upload-icon" aria-hidden="true">↑</span>
+                      <strong id="file-label">选择或拖入文档</strong>
+                      <span>支持 Markdown、TXT、PDF，单文件不超过服务限制</span>
+                    </label>
+                  </div>
+                  <div class="form-row">
+                    <label for="source-uri">来源标识 <span>可选</span></label>
+                    <input id="source-uri" name="source_uri" placeholder="kb://handbook/refund-policy">
+                  </div>
+                  <details class="advanced-fields">
+                    <summary>高级元数据</summary>
+                    <label for="metadata-json">JSON 对象</label>
+                    <textarea id="metadata-json" name="metadata_json" rows="3" spellcheck="false">{}</textarea>
+                  </details>
+                  <div class="form-actions">
+                    <span class="form-status" id="upload-status" role="status"></span>
+                    <button class="primary-button" id="upload-document" type="submit">上传并索引</button>
+                  </div>
+                </form>
+
+                <div class="table-region" tabindex="0" aria-label="文档列表，可横向滚动">
+                  <table>
+                    <thead>
+                      <tr><th scope="col">文档</th><th scope="col">版本</th><th scope="col">分块</th><th scope="col">更新时间</th><th scope="col">操作</th></tr>
+                    </thead>
+                    <tbody id="document-table-body"></tbody>
+                  </table>
+                  <div class="table-empty" id="document-empty">尚未入库文档。</div>
+                </div>
+              </section>
+
+              <aside class="knowledge-tools" aria-label="结构化知识工具">
+                <section class="tool-panel" aria-labelledby="faq-title">
+                  <p class="eyebrow">标准答案</p>
+                  <h3 id="faq-title">新增 FAQ</h3>
+                  <form id="faq-form">
+                    <label for="faq-question">问题</label>
+                    <input id="faq-question" maxlength="2000" required>
+                    <label for="faq-answer">审核答案</label>
+                    <textarea id="faq-answer" rows="4" maxlength="20000" required></textarea>
+                    <label class="checkbox-field"><input id="faq-approved" type="checkbox" checked><span>标记为已审核，可直接命中</span></label>
+                    <div class="form-actions">
+                      <span class="form-status" id="faq-status" role="status"></span>
+                      <button class="secondary-button" type="submit">保存 FAQ</button>
+                    </div>
+                  </form>
+                </section>
+
+                <section class="tool-panel" aria-labelledby="kg-title">
+                  <p class="eyebrow">实体关系</p>
+                  <h3 id="kg-title">新增知识三元组</h3>
+                  <form id="kg-form">
+                    <label for="kg-subject">主体</label><input id="kg-subject" maxlength="500" required>
+                    <label for="kg-predicate">关系</label><input id="kg-predicate" maxlength="200" required>
+                    <label for="kg-object">客体</label><textarea id="kg-object" rows="3" maxlength="4000" required></textarea>
+                    <div class="form-actions">
+                      <span class="form-status" id="kg-status" role="status"></span>
+                      <button class="secondary-button" type="submit">保存三元组</button>
+                    </div>
+                  </form>
+                </section>
+              </aside>
+            </div>
+
+            <section class="search-lab" aria-labelledby="search-title">
+              <div class="panel-heading">
+                <div><p class="eyebrow">召回实验室</p><h3 id="search-title">检查搜索结果</h3></div>
+              </div>
+              <form class="search-form" id="search-form">
+                <label for="search-query">搜索知识库</label>
+                <div><input id="search-query" required placeholder="输入需要验证的查询"><button class="primary-button" type="submit">执行搜索</button></div>
+              </form>
+              <div class="search-results" id="search-results" aria-live="polite">
+                <p class="empty-copy">搜索后将并列展示关键词与语义召回结果。</p>
+              </div>
+            </section>
+          </section>
+
+          <section class="view" id="view-operations" data-view="operations" aria-labelledby="operations-heading" hidden>
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">运行与质量</p>
+                <h2 id="operations-heading">知道系统现在是否可信</h2>
+                <p>查看服务就绪状态、SLO 窗口与回答质量记录。数值均来自当前运行实例。</p>
+              </div>
+              <span class="freshness" id="operations-freshness">尚未刷新</span>
+            </div>
+
+            <section class="health-strip" aria-labelledby="health-title">
+              <div><p class="eyebrow">实时状态</p><h3 id="health-title">服务健康</h3></div>
+              <dl>
+                <div><dt>就绪</dt><dd id="health-ready">—</dd></div>
+                <div><dt>模型</dt><dd id="health-model">—</dd></div>
+                <div><dt>数据库</dt><dd id="health-database">—</dd></div>
+                <div><dt>版本</dt><dd id="health-version">—</dd></div>
+              </dl>
+            </section>
+
+            <div class="operations-grid">
+              <section class="metric-panel" aria-labelledby="slo-title">
+                <div class="panel-heading"><div><p class="eyebrow">服务目标</p><h3 id="slo-title">SLO 快照</h3></div><span class="status-label" id="slo-status">无数据</span></div>
+                <div class="metric-list" id="slo-metrics">
+                  <p class="empty-copy">等待指标数据。</p>
+                </div>
+              </section>
+              <section class="metric-panel" aria-labelledby="quality-title">
+                <div class="panel-heading"><div><p class="eyebrow">答案审计</p><h3 id="quality-title">质量记录</h3></div></div>
+                <dl class="quality-stats">
+                  <div><dt>总记录</dt><dd id="quality-total">—</dd></div>
+                  <div><dt>已回答</dt><dd id="quality-answered">—</dd></div>
+                  <div><dt>证据不足</dt><dd id="quality-insufficient">—</dd></div>
+                  <div><dt>转人工</dt><dd id="quality-human">—</dd></div>
+                  <div><dt>已修复</dt><dd id="quality-repaired">—</dd></div>
+                </dl>
+              </section>
+            </div>
+
+            <section class="connection-note" aria-labelledby="connection-note-title">
+              <div><p class="eyebrow">访问控制</p><h3 id="connection-note-title">API 连接</h3><p id="connection-description">当前使用同源服务。生产环境如启用 API Key，请在本会话中配置。</p></div>
+              <button class="secondary-button" id="operations-connection" type="button">配置并验证</button>
+            </section>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <dialog class="modal" id="connection-dialog" aria-labelledby="connection-title">
+      <form method="dialog" class="modal-card" id="connection-form">
+        <div class="modal-header">
+          <div><p class="eyebrow">当前浏览器会话</p><h2 id="connection-title">连接设置</h2></div>
+          <button class="icon-button" value="cancel" aria-label="关闭连接设置" type="submit">×</button>
+        </div>
+        <p>API Key 仅保存在当前标签页的 sessionStorage，不会写入服务端或长期存储。</p>
+        <label for="api-key">API Key</label>
+        <div class="password-field"><input id="api-key" type="password" autocomplete="off" spellcheck="false"><button type="button" id="toggle-api-key" aria-label="显示 API Key">显示</button></div>
+        <div class="modal-status" id="connection-status" role="status"></div>
+        <div class="modal-actions">
+          <button class="text-button danger-text" id="clear-api-key" type="button">清除密钥</button>
+          <span class="spacer"></span>
+          <button class="secondary-button" value="cancel" type="submit">取消</button>
+          <button class="primary-button" id="save-api-key" type="button">保存并验证</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="delete-dialog" aria-labelledby="delete-title">
+      <form method="dialog" class="modal-card compact-modal">
+        <p class="eyebrow">需要确认</p>
+        <h2 id="delete-title">停用这份文档？</h2>
+        <p id="delete-description">文档将不再参与检索。操作完成后可重新上传相同来源进行恢复。</p>
+        <div class="modal-actions">
+          <button class="secondary-button" value="cancel" type="submit">保留文档</button>
+          <button class="danger-button" id="confirm-delete" value="confirm" type="submit">确认停用</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
+    <div class="visually-hidden" id="status-announcer" role="status" aria-live="polite"></div>
+  </body>
+</html>

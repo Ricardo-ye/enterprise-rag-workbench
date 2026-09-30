@@ -1,0 +1,42 @@
+services:
+  api:
+    build:
+      context: .
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      RAG_MODEL_PROVIDER: ${RAG_MODEL_PROVIDER:-mock}
+      RAG_DATABASE_PATH: /app/data/enterprise_rag.db
+      RAG_DATABASE_BACKUP_DIRECTORY: /app/data/backups
+      RAG_SQLITE_BUSY_TIMEOUT_MS: ${RAG_SQLITE_BUSY_TIMEOUT_MS:-30000}
+      RAG_SQLITE_SYNCHRONOUS: ${RAG_SQLITE_SYNCHRONOUS:-FULL}
+    ports:
+      - "8000:8000"
+    volumes:
+      - rag-data:/app/data
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready')",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+
+volumes:
+  rag-data:
+

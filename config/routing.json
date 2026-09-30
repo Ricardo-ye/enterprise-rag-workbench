@@ -1,0 +1,194 @@
+{
+  "version": 1,
+  "audience": {
+    "business_keywords": [
+      "企业客户", "经销商", "供应商", "车队", "采购", "对公", "门店", "员工", "内部系统"
+    ],
+    "consumer_keywords": [
+      "我的车", "车主", "个人", "试驾", "买车", "购车"
+    ]
+  },
+  "domains": [
+    {
+      "name": "insurance",
+      "display_name": "保险理赔",
+      "keywords": ["保险", "理赔", "报案", "事故", "出险", "保单", "赔付", "定损"]
+    },
+    {
+      "name": "after_sales",
+      "display_name": "售后维保",
+      "keywords": ["保养", "维修", "维保", "故障", "工单", "售后", "服务中心", "预约维修"]
+    },
+    {
+      "name": "vehicle",
+      "display_name": "车辆产品",
+      "keywords": ["续航", "充电", "电池", "车型", "车辆", "快充", "车机", "轮胎", "800v"]
+    },
+    {
+      "name": "sales",
+      "display_name": "销售导购",
+      "keywords": ["价格", "报价", "优惠", "购车", "买车", "试驾", "配置", "金融方案"]
+    },
+    {
+      "name": "enterprise",
+      "display_name": "企业业务",
+      "keywords": ["企业客户", "经销商", "供应商", "车队", "采购", "对公", "门店", "员工"]
+    }
+  ],
+  "intents": [
+    {
+      "name": "report_accident",
+      "display_name": "事故报案",
+      "domain": "insurance",
+      "kind": "task",
+      "keywords": ["我要报案", "报案", "撞车", "撞了", "发生事故", "出险"],
+      "required_slots": ["vehicle_id", "incident_time", "location"],
+      "priority": 100
+    },
+    {
+      "name": "claim_application",
+      "display_name": "申请理赔",
+      "domain": "insurance",
+      "kind": "task",
+      "keywords": ["申请理赔", "办理理赔", "提交理赔", "理赔申请"],
+      "required_slots": ["policy_number", "claim_type"],
+      "priority": 90
+    },
+    {
+      "name": "insurance_coverage",
+      "display_name": "保障范围查询",
+      "domain": "insurance",
+      "kind": "qa",
+      "keywords": ["保障范围", "保什么", "保险范围", "赔不赔", "理赔材料", "免赔额"],
+      "required_slots": [],
+      "priority": 50
+    },
+    {
+      "name": "maintenance_booking",
+      "display_name": "预约维保",
+      "domain": "after_sales",
+      "kind": "task",
+      "keywords": ["预约保养", "预约维修", "约保养", "约维修", "安排保养", "安排维修"],
+      "required_slots": ["vehicle_id", "service_type", "preferred_time", "service_center"],
+      "priority": 100
+    },
+    {
+      "name": "maintenance_policy_query",
+      "display_name": "维保流程咨询",
+      "domain": "after_sales",
+      "kind": "qa",
+      "keywords": [
+        "预约保养需要提前多久",
+        "保养需要提前多久",
+        "保养需要哪些材料",
+        "保养流程",
+        "维修流程"
+      ],
+      "required_slots": [],
+      "priority": 120
+    },
+    {
+      "name": "work_order_query",
+      "display_name": "工单查询",
+      "domain": "after_sales",
+      "kind": "task",
+      "keywords": ["查询工单", "工单进度", "维修进度", "我的工单", "修好了吗"],
+      "required_slots": ["work_order_id"],
+      "priority": 90
+    },
+    {
+      "name": "warranty_query",
+      "display_name": "保修政策",
+      "domain": "after_sales",
+      "kind": "qa",
+      "keywords": ["保修期", "质保期", "保修政策", "质保政策", "保养周期", "保养多久"],
+      "required_slots": [],
+      "priority": 50
+    },
+    {
+      "name": "range_query",
+      "display_name": "续航查询",
+      "domain": "vehicle",
+      "kind": "qa",
+      "keywords": ["续航多少", "续航里程", "冬季续航", "实际续航", "能跑多远", "续航"],
+      "required_slots": [],
+      "priority": 60
+    },
+    {
+      "name": "charging_query",
+      "display_name": "充电咨询",
+      "domain": "vehicle",
+      "kind": "qa",
+      "keywords": ["充电多久", "怎么充电", "快充", "慢充", "充电功率", "充电时间", "800v"],
+      "required_slots": [],
+      "priority": 60
+    },
+    {
+      "name": "test_drive_booking",
+      "display_name": "预约试驾",
+      "domain": "sales",
+      "kind": "task",
+      "keywords": ["预约试驾", "我要试驾", "申请试驾", "安排试驾"],
+      "required_slots": ["model", "city", "preferred_time", "contact"],
+      "priority": 100
+    },
+    {
+      "name": "price_query",
+      "display_name": "价格优惠咨询",
+      "domain": "sales",
+      "kind": "qa",
+      "keywords": ["多少钱", "价格", "报价", "优惠", "落地价", "金融方案"],
+      "required_slots": [],
+      "priority": 50
+    },
+    {
+      "name": "fleet_service",
+      "display_name": "企业车队服务",
+      "domain": "enterprise",
+      "kind": "task",
+      "keywords": ["车队服务", "企业采购", "批量采购", "对公采购", "车队合作"],
+      "required_slots": ["company_name", "fleet_size", "contact"],
+      "priority": 100
+    }
+  ],
+  "chitchat_phrases": [
+    "你好", "您好", "嗨", "hello", "hi", "谢谢", "感谢", "再见", "你是谁", "你能做什么"
+  ],
+  "follow_up_markers": [
+    "那", "那么", "这个", "那个", "它", "刚才", "继续", "还有", "然后", "明天", "后天", "上午", "下午"
+  ],
+  "safety_rules": [
+    {
+      "id": "prompt_injection",
+      "category": "prompt_injection",
+      "decision": "block",
+      "patterns": [
+        "忽略(?:之前|以上|所有).*指令",
+        "(?:输出|泄露|显示).*(?:系统提示词|开发者消息|system prompt)",
+        "绕过.*(?:安全|审核|限制)"
+      ]
+    },
+    {
+      "id": "dangerous_illegal_request",
+      "category": "illegal_harm",
+      "decision": "block",
+      "patterns": [
+        "(?:如何|怎么|帮我).*(?:制造|制作).*(?:炸弹|爆炸物)",
+        "(?:骗保|伪造事故).*(?:方法|教程|怎么)",
+        "(?:偷车|盗车).*(?:方法|教程|怎么)"
+      ]
+    },
+    {
+      "id": "identity_number",
+      "category": "sensitive_personal_data",
+      "decision": "review",
+      "patterns": ["(?<!\\d)\\d{17}[0-9Xx](?!\\d)"]
+    },
+    {
+      "id": "phone_number",
+      "category": "sensitive_personal_data",
+      "decision": "review",
+      "patterns": ["(?<!\\d)1[3-9]\\d{9}(?!\\d)"]
+    }
+  ]
+}
