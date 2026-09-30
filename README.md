@@ -55,7 +55,7 @@ uv run pytest
 uv run enterprise-rag accept --base-url http://127.0.0.1:8000 --output outputs/final-acceptance.json
 ```
 
-Run `docker compose up --build` for the optional container deployment. See [Operations guide](docs/OPERATIONS.md), [Contributing guide](CONTRIBUTING.md), and [Security policy](SECURITY.md) for deployment, contribution, and reporting details.
+Run `docker compose up --build` for the optional container deployment. See the [Interactive Demo](docs/demo.md), [Operations guide](docs/OPERATIONS.md), [Contributing guide](CONTRIBUTING.md), and [Security policy](SECURITY.md) for deployment, contribution, and reporting details.
 
 ---
 
@@ -68,6 +68,7 @@ KBQA、五路检索、证据约束生成、质量门控、观测指标和可视�
 ## 文档导航
 
 - [运维手册](docs/OPERATIONS.md)：部署、探针、指标、备份和故障定位。
+- [交互式演示](docs/demo.md)：问答、知识入库、检索对比和运行观测截图。
 - [交付说明](docs/DELIVERY.md)：已交付能力、扩展点和上线前任务。
 - [知识库文档](docs/KNOWLEDGE_BASE.md)：可上传到系统自身的结构化项目知识库文章。
 - [开源发布指南](docs/OPEN_SOURCE_RELEASE.md)：GitHub 发布前的仓库整理清单。
