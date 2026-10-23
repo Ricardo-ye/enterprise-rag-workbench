@@ -55,6 +55,10 @@ class Citation(BaseModel):
     source_uri: str
     snippet: str
     score: float
+    # Coverage of the user query in this specific piece of evidence.  It is
+    # deliberately separate from score: an RRF score measures rank agreement,
+    # not whether the evidence actually answers the current question.
+    query_coverage: float = Field(default=1.0, ge=0, le=1)
     retrieval_routes: list[RetrievalRoute]
     metadata: dict[str, Any] = Field(default_factory=dict)
 
@@ -88,3 +92,4 @@ class RetrievalEvaluationResult(BaseModel):
     mrr: float
     ndcg_at_k: float
     cases: list[EvaluationCaseResult]
+

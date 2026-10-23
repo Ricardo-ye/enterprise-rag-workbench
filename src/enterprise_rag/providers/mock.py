@@ -33,29 +33,35 @@ class MockModelProvider(ModelProvider):
         }:
             return None
         evidence = payload.get("evidence")
-        if not isinstance(evidence, list) or not evidence or not isinstance(evidence[0], dict):
+        if not isinstance(evidence, list) or not evidence:
             return json.dumps(
                 {"answer": "证据不足。", "relevance_score": 0.1, "accuracy_score": 0.1},
                 ensure_ascii=False,
             )
-        first = evidence[0]
-        content = str(first.get("content", "")).strip()
         query_terms = self._terms(str(payload.get("query", "")))
-        candidates = [
-            part.strip(" #>*+-\t")
-            for part in re.split(r"\n+|(?<=[。！？!?])", content)
-            if len(part.strip(" #>*+-\t")) >= 4
-        ]
-        sentence = max(
-            candidates or [content],
-            key=lambda value: (
-                int(bool(re.search(r"[。！？!?]$", value))),
-                len(query_terms & self._terms(value)),
-                min(len(value), 120),
-            ),
+        query = str(payload.get("query", ""))
+        candidates: list[tuple[str, int]] = []
+        for item in evidence:
+            if not isinstance(item, dict):
+                continue
+            content = str(item.get("content", "")).strip()
+            index = int(item.get("index", 1))
+            parts = [
+                part.strip(" #>*+-\t")
+                for part in re.split(r"\n+|(?<=[。！？!?])", content)
+                if len(part.strip(" #>*+-\t")) >= 4
+            ]
+            candidates.extend((part, index) for part in (parts or [content]) if part)
+        if not candidates:
+            return json.dumps(
+                {"answer": "证据不足。", "relevance_score": 0.1, "accuracy_score": 0.1},
+                ensure_ascii=False,
+            )
+        sentence, index = max(
+            candidates,
+            key=lambda item: self._candidate_score(item[0], query, query_terms),
         )
         sentence = sentence.rstrip("。！？!?；;")
-        index = int(first.get("index", 1))
         return json.dumps(
             {
                 "answer": f"{sentence} [{index}]。",
@@ -74,3 +80,23 @@ class MockModelProvider(ModelProvider):
             if "\u4e00" <= lowered[index] <= "\u9fff" and "\u4e00" <= lowered[index + 1] <= "\u9fff"
         )
         return terms
+
+    def _candidate_score(
+        self,
+        sentence: str,
+        query: str,
+        query_terms: set[str],
+    ) -> tuple[int, int, int, int, int]:
+        """Prefer declarative, policy-bearing evidence over headings and disclaimers."""
+        normalized_sentence = re.sub(r"[^a-z0-9\u4e00-\u9fff]", "", sentence.casefold())
+        normalized_query = re.sub(r"[^a-z0-9\u4e00-\u9fff]", "", query.casefold())
+        answer_markers = ("可以", "应当", "应", "需要", "核验", "处理", "为", "是", "包括")
+        boilerplate_markers = ("仅用于", "不构成", "演示数据", "回归问题")
+        return (
+            int(not normalized_query or normalized_sentence != normalized_query),
+            -sum(marker in sentence for marker in boilerplate_markers),
+            sum(marker in sentence for marker in answer_markers),
+            len(query_terms & self._terms(sentence)),
+            min(len(sentence), 160),
+        )
+

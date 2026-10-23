@@ -102,7 +102,10 @@ def _statements(answer: str) -> list[str]:
     normalized = answer.replace("\r", "\n")
     return [
         value.strip()
-        for value in re.split(r"(?<=[。！？!?；;])\s*|\n+", normalized)
+        # A semicolon often joins one policy rule with its processing detail.
+        # Treating it as a standalone sentence would require a redundant
+        # citation mid-clause and reject otherwise grounded answers.
+        for value in re.split(r"(?<=[。！？!?])\s*|\n+", normalized)
         if value.strip()
     ]
 
@@ -128,3 +131,4 @@ def _terms(text: str) -> set[str]:
         if "\u4e00" <= lowered[index] <= "\u9fff" and "\u4e00" <= lowered[index + 1] <= "\u9fff"
     }
     return latin | chinese
+

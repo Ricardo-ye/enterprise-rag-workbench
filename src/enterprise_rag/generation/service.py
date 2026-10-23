@@ -28,6 +28,7 @@ class AnswerGenerationService:
         self_score_threshold: float,
         post_audit_threshold: float,
         min_evidence_score: float,
+        min_query_coverage: float,
         max_tokens: int,
         store_records: bool,
         metrics: MetricsRegistry | None = None,
@@ -39,6 +40,7 @@ class AnswerGenerationService:
         self.self_score_threshold = self_score_threshold
         self.post_audit_threshold = post_audit_threshold
         self.min_evidence_score = min_evidence_score
+        self.min_query_coverage = min_query_coverage
         self.max_tokens = max_tokens
         self.store_records = store_records
         self.metrics = metrics
@@ -72,7 +74,10 @@ class AnswerGenerationService:
         eligible_citations = [
             citation
             for citation in evidence_result.citations
-            if citation.score >= self.min_evidence_score
+            if (
+                citation.score >= self.min_evidence_score
+                and citation.query_coverage >= self.min_query_coverage
+            )
         ]
         if not eligible_citations:
             return await self._finalize(
@@ -260,3 +265,4 @@ class AnswerGenerationService:
             f"Source: {citation.source_uri}"
             for citation in citations
         )
+

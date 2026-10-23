@@ -20,18 +20,30 @@ class HeuristicReranker(Reranker):
     def rerank(self, query: str, hits: list[FusedHit]) -> list[FusedHit]:
         if not hits:
             return []
-        query_terms = _terms(query)
         max_rrf = max(hit.rrf_score for hit in hits) or 1.0
         for hit in hits:
-            text_terms = _terms(f"{hit.title} {hit.content}")
-            overlap = len(query_terms & text_terms) / max(len(query_terms), 1)
+            overlap = query_coverage(query, f"{hit.title} {hit.content}")
             phrase_bonus = 1.0 if query.casefold() in hit.content.casefold() else 0.0
             normalized_rrf = hit.rrf_score / max_rrf
             route_bonus = min(len(hit.retrieval_routes) / 3.0, 1.0)
-            hit.rerank_score = min(
-                1.0,
-                0.55 * overlap + 0.30 * normalized_rrf + 0.10 * route_bonus + 0.05 * phrase_bonus,
-            )
+            # Do not turn a popular but unrelated document into high-quality
+            # evidence merely because several retrievers returned it.  The
+            # generation layer enforces a stricter coverage threshold too.
+            if overlap == 0 and phrase_bonus == 0:
+                hit.rerank_score = min(0.25, 0.15 * normalized_rrf + 0.10 * route_bonus)
+            else:
+                hit.rerank_score = min(
+                    1.0,
+                    0.70 * overlap
+                    + 0.15 * normalized_rrf
+                    + 0.10 * route_bonus
+                    + 0.05 * phrase_bonus,
+                )
+            if _contains_query_echo(question=query, evidence=hit.content):
+                # Example questions and FAQ-like headings are useful metadata,
+                # but they are not answers.  They must not outrank the policy
+                # clause that carries the actual rule.
+                hit.rerank_score = min(hit.rerank_score, 0.25)
         return sorted(hits, key=lambda item: (-item.rerank_score, -item.rrf_score, item.id))
 
 
@@ -65,7 +77,37 @@ def _terms(text: str) -> set[str]:
         for index in range(len(lowered) - 1)
         if "\u4e00" <= lowered[index] <= "\u9fff" and "\u4e00" <= lowered[index + 1] <= "\u9fff"
     }
-    return latin | chinese
+    question_noise = {
+        "什么",
+        "是什",
+        "策是",
+        "怎么",
+        "如何",
+        "为什",
+        "为何",
+        "多少",
+        "能否",
+        "是否",
+    }
+    return latin | (chinese - question_noise)
+
+
+def query_coverage(query: str, evidence: str) -> float:
+    """Return how much of a query is explicitly supported by one evidence item."""
+    query_terms = _terms(query)
+    if not query_terms:
+        return 0.0
+    return len(query_terms & _terms(evidence)) / len(query_terms)
+
+
+def _contains_query_echo(*, question: str, evidence: str) -> bool:
+    normalized_question = re.sub(r"[^a-z0-9\u4e00-\u9fff]", "", question.casefold())
+    normalized_evidence = re.sub(r"[^a-z0-9\u4e00-\u9fff]", "", evidence.casefold())
+    return bool(
+        normalized_question
+        and normalized_question in normalized_evidence
+        and ("?" in evidence or "？" in evidence)
+    )
 
 
 def _sigmoid(value: float) -> float:
@@ -73,3 +115,4 @@ def _sigmoid(value: float) -> float:
         return 1.0 / (1.0 + math.exp(-value))
     exponential = math.exp(value)
     return exponential / (1.0 + exponential)
+

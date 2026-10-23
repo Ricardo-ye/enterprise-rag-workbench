@@ -29,6 +29,7 @@ from enterprise_rag.knowledge.repository import KnowledgeRepository
 from enterprise_rag.knowledge.service import KnowledgeService
 from enterprise_rag.observability.metrics import MetricsRegistry
 from enterprise_rag.providers.factory import create_model_provider
+from enterprise_rag.quality.repository import QualityRepository
 from enterprise_rag.rag.evaluation import RetrieverEvaluator
 from enterprise_rag.rag.rerankers import CrossEncoderReranker, HeuristicReranker
 from enterprise_rag.rag.retrievers import (
@@ -72,6 +73,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         kbqa_repository.initialize()
         answer_record_repository = AnswerRecordRepository(database)
         answer_record_repository.initialize()
+        quality_repository = QualityRepository(database)
+        quality_repository.initialize()
         database.finalize_schema()
         routing_config = load_routing_config(runtime_settings.routing_config_path)
         embedding_provider = HashingEmbeddingProvider(runtime_settings.embedding_dimensions)
@@ -151,6 +154,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             self_score_threshold=runtime_settings.generation_self_score_threshold,
             post_audit_threshold=runtime_settings.generation_post_audit_threshold,
             min_evidence_score=runtime_settings.generation_min_evidence_score,
+            min_query_coverage=runtime_settings.generation_min_query_coverage,
             max_tokens=runtime_settings.generation_max_tokens,
             store_records=runtime_settings.generation_store_records,
             metrics=metrics_registry,
@@ -162,6 +166,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         app.state.rag_service = rag_service
         app.state.retriever_evaluator = RetrieverEvaluator(rag_service)
         app.state.answer_record_repository = answer_record_repository
+        app.state.quality_repository = quality_repository
         app.state.generation_service = generation_service
         app.state.answer_evaluator = AnswerEvaluator(generation_service)
         app.state.readiness_service = ReadinessService(
@@ -205,3 +210,4 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
 
 app = create_app()
+

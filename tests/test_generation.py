@@ -78,6 +78,7 @@ def _service(provider: ModelProvider) -> AnswerGenerationService:
         self_score_threshold=0.90,
         post_audit_threshold=0.90,
         min_evidence_score=0.35,
+        min_query_coverage=0.35,
         max_tokens=400,
         store_records=True,
     )
@@ -133,6 +134,73 @@ def test_rag_answer_refuses_when_there_is_no_evidence(client: TestClient) -> Non
     assert body["confidence"] == 0
     assert body["attempts"] == []
     assert body["record_id"]
+
+
+def test_generic_policy_words_do_not_turn_architecture_notes_into_refund_evidence(
+    client: TestClient,
+) -> None:
+    """Regression for a real bad case: RRF rank is not evidence relevance."""
+    upload = client.post(
+        "/api/v1/knowledge/documents/ingest",
+        files={
+            "file": (
+                "architecture.md",
+                (
+                    "# RAG 架构设计\\n\\n"
+                    "FAQ 的数据质量会影响响应速度，质量门控用于保障回答可靠性。"
+                ).encode(),
+                "text/markdown",
+            )
+        },
+        data={"source_uri": "kb://architecture/quality"},
+    )
+    assert upload.status_code == 200, upload.text
+
+    response = client.post(
+        "/api/v1/assistant/respond",
+        json={"query": "退款政策是什么？"},
+    )
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["status"] == "insufficient_evidence"
+    assert "退款" not in body["answer"] or "没有足够可靠" in body["answer"]
+
+
+def test_refund_example_document_is_retrieved_when_it_explicitly_covers_the_query(
+    client: TestClient,
+) -> None:
+    upload = client.post(
+        "/api/v1/knowledge/documents/ingest",
+        files={
+            "file": (
+                "refund-policy-example.md",
+                (
+                    "# 示例退款政策（仅用于系统验证）\\n\\n"
+                    "本示例退款政策只用于 RAG 工作台测试，不构成真实企业承诺。\\n\\n"
+                    "## 退款申请\\n\\n"
+                    "本示例退款政策规定：未使用且未履约的订单可以申请退款；"
+                    "系统核验订单、支付状态和服务使用记录后处理。\\n\\n"
+                    "对未使用且未履约的订单，用户可以提交退款申请；"
+                    "系统核验订单、支付状态和服务使用情况后处理。"
+                ).encode(),
+                "text/markdown",
+            )
+        },
+        data={"source_uri": "kb://demo/refund-policy"},
+    )
+    assert upload.status_code == 200, upload.text
+
+    response = client.post(
+        "/api/v1/assistant/respond",
+        json={"query": "退款政策是什么？"},
+    )
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["status"] == "answered"
+    assert "未使用" in body["answer"]
+    assert body["retrieval"]["citations"][0]["query_coverage"] >= 0.35
 
 
 def test_stream_only_emits_audited_answer(client: TestClient) -> None:
@@ -260,3 +328,4 @@ def test_end_to_end_answer_evaluation(client: TestClient) -> None:
     assert body["citation_source_recall"] == 1.0
     assert body["p95_latency_ms"] >= body["p50_latency_ms"]
     assert all(case["passed"] for case in body["cases"])
+

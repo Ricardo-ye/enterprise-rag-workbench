@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "description": "检索相关性回归集：防止泛词命中、架构文档串答和无证据强答。运行前需导入 docs/demo-data/refund-policy-example.md。",
+  "groups": [
+    {
+      "id": "negative_relevance",
+      "name": "无关证据拒答",
+      "purpose": "技术架构文档包含 FAQ、政策等泛词时，不能回答消费退款问题。",
+      "cases": [
+        {
+          "id": "refund_not_answered_by_architecture",
+          "name": "架构文档不能冒充退款政策",
+          "scenario": "assistant",
+          "input": {"query": "退款政策是什么？"},
+          "expected": {"status_code": 200, "assistant_status": "insufficient_evidence"},
+          "criterion": "未导入退款资料时必须证据不足，不能输出数据质量、质量门控或其他架构内容。"
+        },
+        {
+          "id": "nonsense_query_refusal",
+          "name": "无意义问题拒答",
+          "scenario": "assistant",
+          "input": {"query": "量子推进器的退票比例是多少？"},
+          "expected": {"status_code": 200, "assistant_status": "insufficient_evidence"},
+          "criterion": "无关词与泛词共存时仍须拒答。"
+        }
+      ]
+    },
+    {
+      "id": "positive_relevance",
+      "name": "显式证据可回答",
+      "purpose": "导入演示退款资料后，精确业务问题应有引用地回答。",
+      "cases": [
+        {
+          "id": "refund_policy_after_ingest",
+          "name": "退款政策演示文档命中",
+          "scenario": "assistant",
+          "input": {"query": "退款政策是什么？"},
+          "expected": {"status_code": 200, "assistant_status": "answered", "answer_contains": "退款"},
+          "criterion": "答案必须来自已导入的示例退款政策，且不得承诺金额或到账时效。"
+        }
+      ]
+    }
+  ]
+}
+

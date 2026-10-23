@@ -67,6 +67,7 @@ class Settings(BaseSettings):
     generation_post_audit_threshold: float = Field(default=0.90, ge=0, le=1)
     generation_min_grounding_coverage: float = Field(default=0.15, ge=0, le=1)
     generation_min_evidence_score: float = Field(default=0.35, ge=0, le=1)
+    generation_min_query_coverage: float = Field(default=0.35, ge=0, le=1)
     generation_max_tokens: int = Field(default=800, ge=64, le=32768)
     generation_store_records: bool = True
 
@@ -95,3 +96,4 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+

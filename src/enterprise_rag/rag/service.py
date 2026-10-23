@@ -11,7 +11,7 @@ from enterprise_rag.rag.models import (
     RetrievalRoute,
     RouteExecution,
 )
-from enterprise_rag.rag.rerankers import Reranker
+from enterprise_rag.rag.rerankers import Reranker, query_coverage
 from enterprise_rag.rag.retrievers import Retriever
 
 
@@ -69,6 +69,7 @@ class RagService:
                 source_uri=hit.source_uri,
                 snippet=hit.content[:500],
                 score=hit.rerank_score,
+                query_coverage=query_coverage(normalized_query, f"{hit.title} {hit.content}"),
                 retrieval_routes=hit.retrieval_routes,
                 metadata=hit.metadata,
             )
@@ -162,3 +163,4 @@ class RagService:
     def _retrieve_one(self, retriever: Retriever, query: str) -> list[RetrievalHit]:
         self.circuits[retriever.route].before_call()
         return retriever.retrieve(query, self.top_k_per_route)
+
